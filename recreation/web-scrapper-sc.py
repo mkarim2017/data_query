@@ -5,7 +5,79 @@ import csv
 import json
 import pandas as pd
 from time import sleep
+import os
 
+def get_sc_la():
+    s_centers = []
+    URL = "https://www.laparks.org/scc"
+    page = requests.get(URL)
+    soup = BeautifulSoup(page.text, "html.parser")
+    centers = soup.find_all("table")[0].find('tbody').find_all('tr')
+    # print(centers)
+    for sc in centers:
+        s_c = {}
+        data = sc.find_all('td')
+        link = "{}{}".format("https://www.laparks.org", data[0].find('a').get('href'))
+        s_c["Name"] = data[0].find('a').text.strip()
+        s_c["Address"] = data[1].text.strip()
+        # print("{} : {} : {}".format(name, address, link))
+        page2 = requests.get(link)
+        soup2 = BeautifulSoup(page2.text, "html.parser")
+        s_c["Facility-Features"] = "NA"
+        s_c["Sports-Fitness-Programs"] = "NA"
+        s_c["Cultural-Programs"] = "NA"
+        print(json.dumps(s_c, indent=2))
+    
+        '''
+        for lab in soup2.select("field-label"):
+            print(lab.text)
+            print(lab.find_next_sibling().text)
+
+        '''
+
+
+        # print(page2.text)
+        rows = soup2.find_all('div', class_="row")
+
+        for row in rows:
+            try:
+                
+                label = row.find('div', class_="field-label").text.strip()
+                items = row.find('div', class_="field-items").text.strip()
+                if label == "Sports and Fitness Programs":
+                    s_c["Sports-Fitness-Programs"] = items
+                elif label == "Cultural Programs":
+                    s_c["Cultural-Programs"] = items
+                elif label == "Facility Features":
+                    s_c["Facility-Features"] = items
+            except Exception as err:
+                pass
+        print(json.dumps(s_c, indent=2))
+        s_centers.append(s_c)
+
+    with open("LA_SC.json", "w") as f:
+        json.dump(s_centers, f, indent=2, sort_keys=True)
+
+    df = pd.read_json('LA_SC.json')
+    df.to_csv('LA_SC.csv')
+
+    '''
+        #print("activities : {}".format(activities))
+        # activities = soup2.find_all('div', class_="col-sm-12")
+        # print("activities : {}".format(activities))
+        facility_features_label = activities.find('div', class_="field-label").text.strip()
+        facility_features_items = activities.find('div', class_="field-items").text.strip()
+        print("label : {} : items: {}".format(facility_features_label, facility_features_items))
+
+        activities = soup2.find_all('div', class_="row")[8]
+        facility_features_label = activities.find('div', class_="field-label").text.strip()
+        facility_features_items = activities.find('div', class_="field-items").text.strip()
+        print("label : {} : items: {}".format(facility_features_label, facility_features_items))
+        activities = soup2.find_all('div', class_="row")[9]
+        facility_features_label = activities.find('div', class_="field-label").text.strip()
+        facility_features_items = activities.find('div', class_="field-items").text.strip()
+        print("label : {} : items: {}".format(facility_features_label, facility_features_items))
+    '''
 def get_sc_ca():
     URL = "https://www.careforcalifornia.net/list11_ca_senior_centers.htm"
     page = requests.get(URL)
@@ -97,7 +169,9 @@ def get_la_cities():
                  
 def main():
 
-    get_sc_ca()
+    get_sc_la()
+
+    # get_sc_ca()
 
     #get_city_data('Yorba Linda')
 
