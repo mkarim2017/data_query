@@ -15,7 +15,7 @@ def get_variables(var_file="variables_2020_population.json"):
     return data
 
 def get_api_key(account="census"):
-    with open(".apikey", "r") as f:
+    with open("/Users/mkarim/DAVID/develop/.apikey", "r") as f:
         data = json.load(f)
     return data.get(account, None)
 
@@ -92,6 +92,7 @@ def get_lat_lon_from_address(addr):
     lat = None
     lon = None
 
+    print("Processing Address : {}".format(addr))
     try:
         loc = geolocator.geocode(addr)
         return loc.latitude, loc.longitude
@@ -107,13 +108,14 @@ def get_goole_api_lat_lon_from_address(addr):
     return lat, lng
 
 if __name__ == "__main__":
-    test()
+    # test()
 
 
-    '''
-    address = 'Shivaji Nagar, Bangalore, KA 560001'
+    
+    address = 'Alondra Park Lake, CA, USA'
     lat, lon = get_lat_lon_from_address(address)
 
+    print(address)
     print("{},{}".format(lat, lon))
 
-    '''
+    

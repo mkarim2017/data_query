@@ -144,51 +144,6 @@ def get_beach_details(URL):
         list = soup.find_all('div', class_="grve-box-title grve-h3")
         print(list)
 
-def get_la_county_beaches():
-    URL = "https://www.laalmanac.com/parks/pa11.php"
-    page = requests.get(URL)
-    soup = BeautifulSoup(page.text, "html.parser")
-
-    content = soup.find('div', class_="content-box")
-    list = content.find('table').find('tbody').find_all('tr')
-    # print(list)
-    beaches = []
-
-    for l in list:
-        try:
-            m = {}
-            data = l.find_all('td')
-            m["Name"] = data[0].text.strip()
-            m["Address"] = data[0].text.strip()
-            m["Activities"] = ""
-            m["Facilities"] = ""
-            try:
-                href = l.find('a').get('href')
-            except:
-                href = ""
-
-            if len(href)>0:
-                get_beach_details(href)
-
-            lat=""
-            lon=""
-            try:
-                lat, lon = get_lat_lon_from_address(m["Address"])
-            except Exception as err:
-                print(str(err))
-            m["lat"] = lat
-            m["lon"] = lon
-            m["href"] = href
-            print(json.dumps(m, indent=2))
-            beaches.append(m)
-        except Exception as err:
-            print(str(err))
-
-    with open("LA_County_Beaches.json", "w") as f:
-        json.dump(beaches, f, indent=2, sort_keys=False)
-
-    df = pd.read_json('LA_County_Beaches.json')
-    df.to_csv('LA_County_Beaches.csv')
 
 def get_la_county_parks_laalmanac():
     URL = "https://www.laalmanac.com/parks/pa10.php"
@@ -241,6 +196,9 @@ def get_la_county_parks_laalmanac():
 
     df = pd.read_json('LA_County_Parks_LAAlmanac.json')
     df.to_csv('LA_County_Parks_LAAlmanac.csv')
+
+
+
 
 def get_la_museums():
     URL = "https://www.laparks.org/museums"
@@ -310,9 +268,13 @@ def get_park_details(href):
     details["address"] = address    
     return details
 
+def get_la_county_parks_details(href):
+    page = requests.get(href)
+    soup = BeautifulSoup(page.text, "html.parser")
+    print(page.text)
 
 def get_parks_la_county():
-    URL = "view-source:https://parks.lacounty.gov/park-overview/"
+    URL = "https://parks.lacounty.gov/park-overview/"
     page = requests.get(URL)
     soup = BeautifulSoup(page.text, "html.parser")
     la_parks = []
@@ -352,7 +314,7 @@ def get_parks_la_county():
         json.dump(la_parks, f, indent=2, sort_keys=False)
 
     df = pd.read_json('LA_Parks.json')
-    df.to_csv('LA_Parks.csv')
+    df.to_csv('LA_Parks-Nerw.csv')
 
 
 def get_municipal_parks_la_city2():
@@ -729,9 +691,66 @@ def get_la_cities():
                     la_cities.append(z_c)
 
     return la_cities   
+
+
+def get_la_county_beaches():
+    URL = "https://www.laalmanac.com/parks/pa11.php"
+    page = requests.get(URL)
+    soup = BeautifulSoup(page.text, "html.parser")
+
+    content = soup.find('div', class_="content-box")
+    list = content.find('table').find('tbody').find_all('tr')
+    # print(list)
+    beaches = []
+
+    for l in list:
+        try:
+            m = {}
+            data = l.find_all('td')
+            m["Name"] = data[0].text.strip()
+            m["Address"] = data[1].text.strip()
+            m["Activities"] = ""
+            m["Facilities"] = ""
+            try:
+                href = l.find('a').get('href')
+            except:
+                href = ""
+
+            if len(href)>0:
+                get_beach_details(href)
+
+            lat=""
+            lon=""
+            try:
+                lat, lon = get_lat_lon_from_address(m["Address"])
+            except Exception as err:
+                print(str(err))
+            if not lat or not lon:
+                try:
+                    addr = "{}, CA, USA".format(m["Name"])
+                    lat, lon = get_lat_lon_from_address(addr)
+                except Exception as err:
+                    print(str(err))
+
+            m["lat"] = lat
+            m["lon"] = lon
+            m["href"] = href
+            print(json.dumps(m, indent=2))
+            beaches.append(m)
+        except Exception as err:
+            print(str(err))
+
+    with open("LA_County_Beaches.json", "w") as f:
+        json.dump(beaches, f, indent=2, sort_keys=False)
+
+    df = pd.read_json('LA_County_Beaches.json')
+    df.to_csv('LA_County_Beaches_new.csv')
+
                  
 def main():
-    get_la_county_parks_laalmanac()
+
+    #get_parks_la_county()
+    # get_la_county_parks_laalmanac()
     # get_la_county_beaches()
     # get_state_parks_la_county()
     # get_municipal_parks_la_city2()
@@ -741,6 +760,8 @@ def main():
     # get_county_museums("Orange", "https://en.wikipedia.org/wiki/List_of_museums_in_Orange_County,_California")
     #get_la_county_museums()
     #get_la_museums()
+
+    get_la_county_parks_details("view-source:https://parks.lacounty.gov/72nd-street-equestrian-park/")
 
     # get_parks_la_city()
     #get_water_resources()
